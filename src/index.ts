@@ -19,27 +19,11 @@ class Book {
 
         Book.books.push(this)
     }
-    borrow() {
-        if (this.available) {
-            this.available = false
-        }
-        else {
-            console.log("This book is not available")
-        }
-    }
-    giveBack() {
-        if (!this.available) {
-            this.available = true
-        }
-        else {
-            console.log("This book is not borrowed")
-        }
-    }
 }
 
 class User {
     static users: User[] = [];
-    
+
     id: number;
     name: string;
     borrowedBooks: Book[] = [];
@@ -57,11 +41,18 @@ class User {
     }
 
     borrow(book: Book) {
-        book.borrow()
-        this.borrowedBooks.push(book)
+        if (book.available) {
+            book.available = false
+            this.borrowedBooks.push(book)
+        }
     }
     giveBack(book: Book) {
-        book.giveBack()
+        const res = this.borrowedBooks.find(b => b === book)
+        if (!book.available && res) {
+            book.available = true
+            this.borrowedBooks = this.borrowedBooks.filter(
+                b => b !== book)
+        }
     }
 }
 
@@ -76,7 +67,8 @@ user1.borrow(book1)
 user1.borrow(book2)
 user1.borrow(book3)
 
+user1.giveBack(book1)
+
 user1.consultCatalog()
 console.log(User.users)
-console.log(user1.borrowedBooks)
 
