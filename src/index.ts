@@ -7,7 +7,6 @@ class Book {
     id: number;
     name: string;
     author: string;
-    available: boolean
 
     constructor(
         name: string,
@@ -15,7 +14,6 @@ class Book {
         this.id = bookid++
         this.name = name
         this.author = author
-        this.available = true
 
         Book.books.push(this)
     }
@@ -26,7 +24,6 @@ class User {
 
     id: number;
     name: string;
-    borrowedBooks: Book[] = [];
 
     constructor(
         name: string) {
@@ -39,20 +36,68 @@ class User {
     consultCatalog() {
         console.log(Book.books)
     }
+}
 
-    borrow(book: Book) {
-        if (book.available) {
-            book.available = false
-            this.borrowedBooks.push(book)
+class LoanService {
+    borrow(user: User, book: Book) {
+        if (!Loan.loans.some(l => l.book === book && !l.returned)) {
+            const loan = new Loan(user, book)
+            return {
+                success: true,
+                data: loan,
+                message: "ok"
+            }
+        }
+        else {
+            return {
+                success: false,
+                data: undefined,
+                message: "book unavailable"
+            }
         }
     }
-    giveBack(book: Book) {
-        const res = this.borrowedBooks.find(b => b === book)
-        if (!book.available && res) {
-            book.available = true
-            this.borrowedBooks = this.borrowedBooks.filter(
-                b => b !== book)
+    giveBack(user: User, book: Book) {
+        const loan = Loan.loans.find(l =>
+            l.book === book
+            && l.user === user
+            && !l.returned)
+        if (loan) {
+            loan.giveBack()
+            return {
+                success: true,
+                data: loan,
+                message: "ok"
+            }
         }
+        else{
+            return {
+                success: false,
+                data: undefined,
+                message: "There is no loan"
+            }
+        }
+    }
+}
+class Loan {
+    static loans: Loan[] = []
+
+    user: User;
+    book: Book;
+    loanDate: Date;
+    returned: boolean;
+    returnDate?: Date;
+    constructor(user: User, book: Book) {
+        this.user = user
+        this.book = book
+        this.loanDate = new Date()
+        this.returned = false
+
+        Loan.loans.push(this)
+    }
+
+    giveBack() {
+        this.returned = true
+        this.returnDate = new Date()
     }
 }
 
@@ -63,12 +108,5 @@ const book3 = new Book("Jorge A.", "vidas secas")
 const user1 = new User("gabriel")
 const user2 = new User("gabriela")
 
-user1.borrow(book1)
-user1.borrow(book2)
-user1.borrow(book3)
-
-user1.giveBack(book1)
-
-user1.consultCatalog()
-console.log(User.users)
+console.log(new LoanService().borrow(user2, book3))
 
